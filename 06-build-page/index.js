@@ -8,6 +8,7 @@ const templatesSource = path.join(__dirname, 'template.html');
 const destPath = path.join(__dirname, 'project-dist');
 const destStylesPath = path.join(destPath, 'style.css');
 const destAssetsPath = path.join(destPath, 'assets');
+let dirExists = false;
 
 fsAsync.mkdir(destPath, {recursive: true});
 
@@ -38,7 +39,9 @@ async function createCSS() {
 }
 
 async function copyFile() {
-  await fsAsync.rmdir(destAssetsPath, {recursive: true});
+  if (dirExists) {
+    await fsAsync.rmdir(destAssetsPath, {recursive: true});
+  }
   await fsAsync.mkdir(destAssetsPath, {recursive: true});
   fs.readdir(assetsSource, (e, files) => {
     if (e) throw e;
@@ -59,6 +62,18 @@ async function copyFile() {
   });
 }
 
+function checkDirExists() {
+  fs.stat(destAssetsPath, e => {
+    if (!e) {
+      dirExists = true;
+      copyFile();
+    } else {
+      dirExists = false;
+      copyFile();
+    }
+  });
+}
+
 createPage();
 createCSS();
-copyFile();
+checkDirExists();
